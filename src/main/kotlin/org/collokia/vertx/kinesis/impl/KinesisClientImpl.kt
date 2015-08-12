@@ -12,6 +12,7 @@ import com.amazonaws.services.kinesis.AmazonKinesisAsync
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient
 import com.amazonaws.services.kinesis.model.CreateStreamRequest
 import com.amazonaws.services.kinesis.model.DescribeStreamRequest
+import com.amazonaws.services.kinesis.model.PutRecordRequest
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
@@ -20,6 +21,7 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
 import org.collokia.vertx.kinesis.KinesisClient
+import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.properties.Delegates
 
@@ -29,7 +31,7 @@ class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClien
         private val log = LoggerFactory.getLogger(javaClass)
     }
 
-    private var client: AmazonKinesisAsync by Delegates.notNull()
+    var client: AmazonKinesisAsync by Delegates.notNull()
 
     private var initialized = AtomicBoolean(false)
 
@@ -55,7 +57,16 @@ class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClien
                                     .put("shardId", shard.getShardId())
                                     .put("parentShardId", shard.getParentShardId())
                                     .put("adjacentParentShardId", shard.getAdjacentParentShardId())
-                                    // TODO: describe hashKeyRange and sequenceNumberRange
+                                    .put("hashKeyRange", shard?.getHashKeyRange().let { hashRange ->
+                                        JsonObject()
+                                            .put("startingHashKey", hashRange?.getStartingHashKey())
+                                            .put("endingHashKey", hashRange?.getEndingHashKey())
+                                    })
+                                    .put("sequenceNumberRange", shard?.getSequenceNumberRange().let { sequenceRange ->
+                                        JsonObject()
+                                            .put("startingSequenceNumber", sequenceRange?.getStartingSequenceNumber())
+                                            .put("endingSequenceNumber", sequenceRange?.getEndingSequenceNumber())
+                                    })
                             })
                         )
                     }
@@ -64,7 +75,22 @@ class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClien
         }
     }
 
-    override fun start(resultHandler: Handler<AsyncResult<Void>>?) {
+    override fun putRecord(streamName: String, record: JsonObject, resultHandler: Handler<AsyncResult<JsonObject>>) {
+        withClient { client ->
+            client.putRecordAsync(PutRecordRequest()
+                .withData(ByteBuffer.wrap(record.getBinary("data")))
+                .withExplicitHashKey(record.getString("explicitHashKey"))
+                .withPartitionKey(record.getString("partitionKey"))
+                .withStreamName(streamName), resultHandler.withConverter {
+                    JsonObject()
+                        .put("shardId", it.getShardId())
+                        .put("sequenceNumber", it.getSequenceNumber())
+                }
+            )
+        }
+    }
+
+    override fun start(resultHandler: Handler<AsyncResult<Void>>) {
         log.info("Starting Kinesis client");
 
         vertx.executeBlocking(Handler { future ->

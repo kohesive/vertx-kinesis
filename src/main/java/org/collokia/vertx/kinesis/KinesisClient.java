@@ -18,6 +18,8 @@ public interface KinesisClient {
 
     void describeStream(String streamName, Integer limit, String exclusiveStartShardId, Handler<AsyncResult<JsonObject>> resultHandler);
 
+    void putRecord(String streamName, JsonObject record, Handler<AsyncResult<JsonObject>> resultHandler);
+
     void start(Handler<AsyncResult<Void>> resultHandler);
 
     void stop(Handler<AsyncResult<Void>> resultHandler);
