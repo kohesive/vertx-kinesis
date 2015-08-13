@@ -10,10 +10,7 @@ import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.kinesis.AmazonKinesisAsync
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient
-import com.amazonaws.services.kinesis.model.CreateStreamRequest
-import com.amazonaws.services.kinesis.model.DescribeStreamRequest
-import com.amazonaws.services.kinesis.model.GetShardIteratorRequest
-import com.amazonaws.services.kinesis.model.PutRecordRequest
+import com.amazonaws.services.kinesis.model.*
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
@@ -22,6 +19,7 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
 import org.collokia.vertx.kinesis.KinesisClient
+import org.collokia.vertx.kinesis.util.toByteArray
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.properties.Delegates
@@ -98,6 +96,22 @@ class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClien
                 .withShardIteratorType(shardIteratorType)
                 .withStartingSequenceNumber(startingSequenceNumber), resultHandler.withConverter { it.getShardIterator() }
             )
+        }
+    }
+
+    override fun getRecords(shardIterator: String, limit: Int?, resultHandler: Handler<AsyncResult<JsonObject>>) {
+        withClient { client ->
+            client.getRecordsAsync(GetRecordsRequest().withShardIterator(shardIterator).withLimit(limit), resultHandler.withConverter {
+                JsonObject()
+                    .put("nextShardIterator", it.getNextShardIterator())
+                    .put("millisBehindLatest", it.getMillisBehindLatest())
+                    .put("records", JsonArray(it.getRecords().map { record ->
+                        JsonObject()
+                            .put("sequenceNumber", record.getSequenceNumber())
+                            .put("data", record.getData().toByteArray())
+                            .put("partitionKey", record.getPartitionKey())
+                    }))
+            })
         }
     }
 

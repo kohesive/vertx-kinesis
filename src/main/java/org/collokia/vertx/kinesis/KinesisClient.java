@@ -22,6 +22,8 @@ public interface KinesisClient {
 
     void getShardIterator(String streamName, String shardId, String shardIteratorType, String startingSequenceNumber, Handler<AsyncResult<String>> resultHandler);
 
+    void getRecords(String shardIterator, Integer limit, Handler<AsyncResult<JsonObject>> resultHandler);
+
     void start(Handler<AsyncResult<Void>> resultHandler);
 
     void stop(Handler<AsyncResult<Void>> resultHandler);

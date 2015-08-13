@@ -15,18 +15,22 @@ class KinesisShardConsumerVerticle : AbstractVerticle() {
 
     private var vertxClient: KinesisClient by Delegates.notNull()
 
+    private var shardIterator: String by Delegates.notNull()
+
     override fun start(startFuture: Future<Void>) {
         val streamName = config().getString("streamName")
-        val shardId = config().getString("shardId")
+        val shardId    = config().getString("shardId")
 
         vertxClient = KinesisClientImpl(vertx, config())
         vertxClient.start {
             if (it.succeeded()) {
                 vertxClient.getShardIterator(streamName, shardId, "TRIM_HORIZON", null, Handler {
                     if (it.succeeded()) {
-                        val shardIterator = it.result()
+                        shardIterator = it.result()
 
-                        // TODO: start scrolling
+                        // TODO: schedule routeRecords()
+
+                        startFuture.complete()
                     } else {
                         startFuture.fail(it.cause())
                     }
@@ -35,6 +39,28 @@ class KinesisShardConsumerVerticle : AbstractVerticle() {
                 startFuture.fail(it.cause())
             }
         }
+    }
+
+    private fun routeRecords() {
+        val streamName = config().getString("streamName")
+        val shardId    = config().getString("shardId")
+        val address    = config().getString("address")
+
+        vertxClient.getRecords(shardIterator, null, Handler {
+            if (it.succeeded()) {
+                val result = it.result()
+
+                result.getJsonArray("records").forEach { recordJson ->
+                    vertx.eventBus().send(address, recordJson)
+                }
+
+                shardIterator = result.getString("nextShardIterator")
+
+                // TODO: next routeRecords() call ?
+            } else {
+                log.error("Unable to get records from shard $streamName of stream $streamName", it.cause())
+            }
+        })
     }
 
     override fun stop(stopFuture: Future<Void>) {
