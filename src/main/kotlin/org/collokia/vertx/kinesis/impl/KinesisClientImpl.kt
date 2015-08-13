@@ -12,6 +12,7 @@ import com.amazonaws.services.kinesis.AmazonKinesisAsync
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient
 import com.amazonaws.services.kinesis.model.CreateStreamRequest
 import com.amazonaws.services.kinesis.model.DescribeStreamRequest
+import com.amazonaws.services.kinesis.model.GetShardIteratorRequest
 import com.amazonaws.services.kinesis.model.PutRecordRequest
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
@@ -86,6 +87,16 @@ class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClien
                         .put("shardId", it.getShardId())
                         .put("sequenceNumber", it.getSequenceNumber())
                 }
+            )
+        }
+    }
+
+    override fun getShardIterator(streamName: String, shardId: String, shardIteratorType: String, startingSequenceNumber: String?, resultHandler: Handler<AsyncResult<String>>) {
+        withClient { client ->
+            client.getShardIteratorAsync(GetShardIteratorRequest()
+                .withShardId(shardId)
+                .withShardIteratorType(shardIteratorType)
+                .withStartingSequenceNumber(startingSequenceNumber), resultHandler.withConverter { it.getShardIterator() }
             )
         }
     }
