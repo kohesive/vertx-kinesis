@@ -92,6 +92,7 @@ class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClien
     override fun getShardIterator(streamName: String, shardId: String, shardIteratorType: String, startingSequenceNumber: String?, resultHandler: Handler<AsyncResult<String>>) {
         withClient { client ->
             client.getShardIteratorAsync(GetShardIteratorRequest()
+                .withStreamName(streamName)
                 .withShardId(shardId)
                 .withShardIteratorType(shardIteratorType)
                 .withStartingSequenceNumber(startingSequenceNumber), resultHandler.withConverter { it.getShardIterator() }

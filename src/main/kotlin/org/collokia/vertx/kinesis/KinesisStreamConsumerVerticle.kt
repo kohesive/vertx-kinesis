@@ -1,6 +1,5 @@
 package org.collokia.vertx.kinesis
 
-import com.amazonaws.services.kinesis.AmazonKinesisAsync
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
@@ -20,7 +19,6 @@ class KinesisStreamConsumerVerticle : AbstractVerticle() {
         private val ShardConsumerVerticleName = "org.collokia.vertx.kinesis.KinesisShardConsumerVerticle"
     }
 
-//    private var amazonClient: AmazonKinesisAsync by Delegates.notNull()
     private var vertxClient: KinesisClient by Delegates.notNull()
 
     private var shardVerticlesDeploymentIds = CopyOnWriteArrayList<String>()
@@ -31,7 +29,6 @@ class KinesisStreamConsumerVerticle : AbstractVerticle() {
         vertxClient = KinesisClientImpl(vertx, config())
         vertxClient.start {
             if (it.succeeded()) {
-//                amazonClient = (vertxClient as KinesisClientImpl).client
 
                 vertxClient.describeStream(streamName, null, null) {
                     if (it.succeeded()) {
@@ -56,6 +53,7 @@ class KinesisStreamConsumerVerticle : AbstractVerticle() {
                         }
 
                         if (latch.await(10, TimeUnit.SECONDS)) {
+                            log.info("Deployed ${ shardIds.size() } shard consumer verticles")
                             startFuture.complete()
                         } else {
                             startFuture.fail("Can't initialize shard consumers")
