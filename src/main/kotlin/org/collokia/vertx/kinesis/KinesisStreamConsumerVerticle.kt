@@ -16,12 +16,9 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
     companion object {
         private val log = LoggerFactory.getLogger("KinesisStreamConsumerVerticle")
         private val ShardConsumerVerticleName = "org.collokia.vertx.kinesis.KinesisShardConsumerVerticle"
-        private val ShardIteratorMapName = "kinesis-sharditerator"
     }
 
     private var shardVerticlesDeploymentIds = CopyOnWriteArrayList<String>()
-
-    private fun getShardIteratorKey(shardId: String) = "${ getStreamName() }-$shardId"
 
     override fun startAfterClientInit(startFuture: Future<Void>) {
         vertxClient.describeStream(getStreamName(), null, null) {
@@ -30,7 +27,7 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
                 val latch = CountDownLatch(shardIds.size())
 
                 shardIds.forEach { shardId ->
-                    vertx.getFromSharedMemoryAsync(ShardIteratorMapName, getShardIteratorKey(shardId), Handler { iteratorAsync: AsyncResult<String?> ->
+                    vertx.getFromSharedMemoryAsync(KinesisVerticle.ShardIteratorMapName, getShardIteratorKey(shardId), Handler { iteratorAsync: AsyncResult<String?> ->
                         if (iteratorAsync.succeeded()) {
                             val shardVerticleConfig = config().copy()
                                 .put("shardId", shardId)

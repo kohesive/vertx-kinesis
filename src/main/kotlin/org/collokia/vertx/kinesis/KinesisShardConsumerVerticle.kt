@@ -1,5 +1,6 @@
 package org.collokia.vertx.kinesis
 
+import com.collokia.vertx.util.putToSharedMemoryAsync
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.DeliveryOptions
@@ -59,13 +60,17 @@ class KinesisShardConsumerVerticle : KinesisVerticle() {
                 val jsonArray = result.getJsonArray("records")
                 println("Got records: $jsonArray") // TODO: delete this
 
-                val deliveryOptions = DeliveryOptions().addHeader("nextShardIterator", nextShardIterator)
                 jsonArray.forEach { recordJson ->
                     vertx.eventBus().send(address, recordJson)
                 }
 
                 if (nextShardIterator != null) {
                     shardIterator = nextShardIterator
+                    vertx.putToSharedMemoryAsync(KinesisVerticle.ShardIteratorMapName, getShardIteratorKey(getShardId()), nextShardIterator, Handler {
+                        if (!it.succeeded()) {
+                            log.error("Unable to store next shard iterator to shared memory", it.cause())
+                        }
+                    })
                 } else {
                     shouldStop.set(true)
                     log.info("No more records would be available from the iterator for shard ${ getShardId() }")

@@ -7,9 +7,15 @@ import kotlin.properties.Delegates
 
 abstract class KinesisVerticle : AbstractVerticle() {
 
+    companion object {
+        val ShardIteratorMapName = "kinesis-sharditerator"
+    }
+
     protected var vertxClient: KinesisClient by Delegates.notNull()
 
     protected fun getStreamName(): String = config().getString("streamName")
+
+    protected fun getShardIteratorKey(shardId: String): String = "${ getStreamName() }-$shardId"
 
     final override fun start(startFuture: Future<Void>) {
         startBeforeClientInit()
