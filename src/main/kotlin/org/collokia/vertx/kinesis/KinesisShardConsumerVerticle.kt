@@ -18,20 +18,29 @@ class KinesisShardConsumerVerticle : KinesisVerticle() {
     private var shouldStop = AtomicBoolean(false)
 
     override fun startAfterClientInit(startFuture: Future<Void>) {
-        // TODO: configure iterator type
-        vertxClient.getShardIterator(getStreamName(), getShardId(), "TRIM_HORIZON", null, Handler {
-            if (it.succeeded()) {
-                shardIterator = it.result()
+        val initialShardIterator = config().getString("shardIterator")
 
-                timerId = vertx.setPeriodic(200) { // TODO: configure
-                    routeRecords()
-                }
-
-                startFuture.complete()
-            } else {
-                startFuture.fail(it.cause())
+        fun scheduleGetRecords() {
+            timerId = vertx.setPeriodic(200) { // TODO: configure
+                routeRecords()
             }
-        })
+        }
+
+        if (initialShardIterator != null) {
+            shardIterator = initialShardIterator
+            scheduleGetRecords()
+            startFuture.complete()
+        } else {
+            vertxClient.getShardIterator(getStreamName(), getShardId(), "TRIM_HORIZON", null, Handler {
+                if (it.succeeded()) {
+                    shardIterator = it.result()
+                    scheduleGetRecords()
+                    startFuture.complete()
+                } else {
+                    startFuture.fail(it.cause())
+                }
+            })
+        }
     }
 
     private fun routeRecords() {
