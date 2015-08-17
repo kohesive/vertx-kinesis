@@ -15,7 +15,6 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
 
     companion object {
         private val log = LoggerFactory.getLogger("KinesisStreamConsumerVerticle")
-        private val ShardConsumerVerticleName = "org.collokia.vertx.kinesis.KinesisShardConsumerVerticle"
     }
 
     private var shardVerticlesDeploymentIds = CopyOnWriteArrayList<String>()
@@ -34,7 +33,7 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
                                 .put("shardIterator", iteratorAsync.result())
 
                             vertx.deployVerticle(
-                                ShardConsumerVerticleName,
+                                config().getString("shardConsumerVerticleName"),
                                 DeploymentOptions().setConfig(shardVerticleConfig),
                                 Handler {
                                     if (it.succeeded()) {

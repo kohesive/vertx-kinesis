@@ -42,6 +42,7 @@ fun main1(args: Array<String>) {
     val config = JsonObject()
         .put("region", "us-west-2")
         .put("streamName", streamName)
+        .put("shardConsumerVerticleName", "org.collokia.vertx.kinesis.KinesisMessageBusShardConsumerVerticle")
         .put("address", address)
 
     val messages = (1..5).map { "Message #$it".toByteArray("UTF-8") }

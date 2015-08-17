@@ -3,15 +3,16 @@ package org.collokia.vertx.kinesis
 import com.collokia.vertx.util.putToSharedMemoryAsync
 import io.vertx.core.Future
 import io.vertx.core.Handler
-import io.vertx.core.eventbus.DeliveryOptions
+import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.properties.Delegates
 
-class KinesisShardConsumerVerticle : KinesisVerticle() {
+abstract class AbstractKinesisShardConsumerVerticle : KinesisVerticle() {
 
     companion object {
         private val log = LoggerFactory.getLogger("KinesisShardConsumerVerticle")
+        private val DefaultPollingInterval: Long = 500
     }
 
     private var timerId: Long by Delegates.notNull()
@@ -22,7 +23,7 @@ class KinesisShardConsumerVerticle : KinesisVerticle() {
         val initialShardIterator = config().getString("shardIterator")
 
         fun scheduleGetRecords() {
-            timerId = vertx.setPeriodic(200) { // TODO: configure
+            timerId = vertx.setPeriodic(config().getLong("pollingInterval") ?: DefaultPollingInterval) {
                 routeRecords()
             }
         }
@@ -44,26 +45,20 @@ class KinesisShardConsumerVerticle : KinesisVerticle() {
         }
     }
 
+    protected abstract fun processRecords(records: List<JsonObject>)
+
     private fun routeRecords() {
         if (shouldStop.get()) {
             return
         }
 
-        val streamName = getStreamName()
-        val address    = config().getString("address")
-
         vertxClient.getRecords(shardIterator, null, Handler {
             if (it.succeeded()) {
                 val result = it.result()
 
+                processRecords(result.getJsonArray("records").map { it as? JsonObject }.filterNotNull())
+
                 val nextShardIterator = result.getString("nextShardIterator")
-                val jsonArray = result.getJsonArray("records")
-                println("Got records: $jsonArray") // TODO: delete this
-
-                jsonArray.forEach { recordJson ->
-                    vertx.eventBus().send(address, recordJson)
-                }
-
                 if (nextShardIterator != null) {
                     shardIterator = nextShardIterator
                     vertx.putToSharedMemoryAsync(KinesisVerticle.ShardIteratorMapName, getShardIteratorKey(getShardId()), nextShardIterator, Handler {
@@ -76,7 +71,7 @@ class KinesisShardConsumerVerticle : KinesisVerticle() {
                     log.info("No more records would be available from the iterator for shard ${ getShardId() }")
                 }
             } else {
-                log.error("Unable to get records from shard $streamName of stream $streamName", it.cause())
+                log.error("Unable to get records from shard ${ getShardId() } of stream ${ getStreamName() }", it.cause())
             }
         })
     }
