@@ -25,7 +25,7 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
                 val shardIds = it.result().getJsonArray("shards").map { (it as? JsonObject)?.getString("shardId") }.filterNotNull()
                 val latch = CountDownLatch(shardIds.size())
 
-                shardIds.forEach { shardId ->
+                for (shardId in shardIds) {
                     vertx.getFromSharedMemoryAsync(KinesisVerticle.ShardIteratorMapName, getShardIteratorKey(shardId), Handler { iteratorAsync: AsyncResult<String?> ->
                         if (iteratorAsync.succeeded()) {
                             val shardVerticleConfig = config().copy()
