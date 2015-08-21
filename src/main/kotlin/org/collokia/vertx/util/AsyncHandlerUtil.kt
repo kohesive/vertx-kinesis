@@ -1,4 +1,4 @@
-package com.collokia.vertx.util
+package org.collokia.vertx.util
 
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler

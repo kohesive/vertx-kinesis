@@ -1,7 +1,7 @@
 package org.collokia.vertx.kinesis
 
-import com.collokia.vertx.util.getFromSharedMemoryAsync
-import com.collokia.vertx.util.onSuccess
+import org.collokia.vertx.util.getFromSharedMemoryAsync
+import org.collokia.vertx.util.onSuccess
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
 import io.vertx.core.json.JsonObject
@@ -25,11 +25,11 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
 
             for (shardId in shardIds) {
                 vertx.getFromSharedMemoryAsync(KinesisVerticle.ShardIteratorMapName, getShardIteratorKey(shardId), onSuccess<String?> {
-                        val shardVerticleConfig = config().copy()
+                    val shardVerticleConfig = config().copy()
                             .put("shardId", shardId)
                             .put("shardIterator", it)
 
-                        vertx.deployVerticle(
+                    vertx.deployVerticle(
                             config().getString("shardConsumerVerticleName"),
                             DeploymentOptions().setConfig(shardVerticleConfig),
                             onSuccess<String> {
@@ -38,10 +38,10 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
                             } onFail {
                                 log.error("Can't start shard consumer verticle", it)
                             }
-                        )
-                    } onFail {
-                        log.error("Can't retrieve shard iterator from shared memory", it)
-                    })
+                    )
+                } onFail {
+                    log.error("Can't retrieve shard iterator from shared memory", it)
+                })
             }
 
             if (latch.await(10, TimeUnit.SECONDS)) {
@@ -56,23 +56,7 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
     }
 
     override fun stopAfterClientDispose(stopFuture: Future<Void>) {
-        // Undeploy shard consumer verticles
-        val latch = CountDownLatch(shardVerticlesDeploymentIds.size())
-
-        shardVerticlesDeploymentIds.forEach { deploymentId ->
-            vertx.undeploy(deploymentId, onSuccess<Void> {
-                shardVerticlesDeploymentIds.remove(deploymentId)
-                latch.countDown()
-            } onFail {
-                log.error("Can't stop shard consumer verticle", it)
-            })
-        }
-
-        if (latch.await(10, TimeUnit.SECONDS)) {
-            stopFuture.complete()
-        } else {
-            stopFuture.fail("Can't stop shard listeners")
-        }
+        stopFuture.complete()
     }
 
 }

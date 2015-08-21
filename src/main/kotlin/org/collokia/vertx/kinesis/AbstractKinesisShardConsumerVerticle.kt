@@ -1,6 +1,6 @@
 package org.collokia.vertx.kinesis
 
-import com.collokia.vertx.util.putToSharedMemoryAsync
+import org.collokia.vertx.util.putToSharedMemoryAsync
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject

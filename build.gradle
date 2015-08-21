@@ -64,6 +64,7 @@ dependencies {
     compile 'nl.komponents.kovenant:kovenant:2.2.+'
 
     annotationProcessor 'io.vertx:vertx-codegen:3.0.0'
+
     testCompile 'junit:junit:4.12'
 }
 

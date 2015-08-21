@@ -42,9 +42,9 @@ abstract class KinesisVerticle : AbstractVerticle() {
         }
     }
 
-    open protected fun startAfterClientInit(startFuture: Future<Void>) {}
+    open protected fun startAfterClientInit(startFuture: Future<Void>) { startFuture.complete() }
 
-    open protected fun stopAfterClientDispose(stopFuture: Future<Void>) {}
+    open protected fun stopAfterClientDispose(stopFuture: Future<Void>) { stopFuture.complete() }
 
     open protected fun startBeforeClientInit() {}
 
