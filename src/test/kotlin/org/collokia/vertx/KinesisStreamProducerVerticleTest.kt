@@ -1,7 +1,6 @@
 package org.collokia.vertx
 
 import io.vertx.core.DeploymentOptions
-import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.eventbus.Message
@@ -25,7 +24,7 @@ import kotlin.test.assertEquals
 
 @RunWith(VertxUnitRunner::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-class KinesisStreamConsumerVerticleTest {
+class KinesisStreamProducerVerticleTest {
 
     companion object {
         val vertx: Vertx = Vertx.vertx()
@@ -33,18 +32,18 @@ class KinesisStreamConsumerVerticleTest {
         val KinesalitePort = 4567
         val KinesaliteHost = "localhost"
 
-        val StreamName = "TestStream"
-        val Address = "kinesis.stream.test"
+        val StreamName = "TestStream2"
+        val ProduceAddress = "kinesis.stream.test2"
+        val ConsumeAddress = "kinesis.stream.test3"
 
         var client: KinesisClient by Delegates.notNull()
 
         val config = JsonObject()
             .put("region", "us-west-2")
             .put("streamName", StreamName)
-            .put("address", Address)
+            .put("address", ProduceAddress)
             .put("host", KinesaliteHost)
             .put("port", KinesalitePort)
-            .put("shardConsumerVerticleName", "org.collokia.vertx.kinesis.KinesisMessageBusShardConsumerVerticle")
 
         @BeforeClass
         @platformStatic
@@ -64,7 +63,7 @@ class KinesisStreamConsumerVerticleTest {
     }
 
     @Test
-    fun testConsume(context: TestContext) {
+    fun testProduce(context: TestContext) {
         client.createStream(StreamName, 2, context.asyncAssertSuccess() {
             // Stream must be created by now
             // Wait for it to become active
@@ -79,8 +78,8 @@ class KinesisStreamConsumerVerticleTest {
                     if (describeJson.getString("streamStatus") == "ACTIVE") {
                         streamActive.set(true)
                     }
-
                     latch.countDown()
+
                 })
 
                 latch.await(3, TimeUnit.SECONDS)
@@ -90,29 +89,29 @@ class KinesisStreamConsumerVerticleTest {
             context.assertTrue(streamActive.get())
 
             // Now the stream is active
-            // Deploy the consumer verticle and start listening to the address
-            vertx.deployVerticle("org.collokia.vertx.kinesis.KinesisStreamConsumerVerticle", DeploymentOptions().setConfig(config), context.asyncAssertSuccess() {
-                vertx.executeBlocking(Handler { future: Future<Void> ->
-                    val receiveLatch = CountDownLatch(1)
+            // Deploy the producer verticle and send some messages
+            vertx.deployVerticle("org.collokia.vertx.kinesis.KinesisStreamProducerVerticle", DeploymentOptions().setConfig(config), context.asyncAssertSuccess() {
+                // Send a message to the address listened by produced verticle
+                val record = JsonObject()
+                    .put("data", "Hello World".toByteArray("UTF-8"))
+                    .put("partitionKey", "p1")
+                vertx.eventBus().send(ProduceAddress, record)
 
-                    // Verticle id deployed, let's start consuming messages from the address configured
-                    vertx.eventBus().consumer(Address, Handler { message: Message<JsonObject> ->
-                        assertEquals("Hello World", String(message.body().getBinary("data"), "UTF-8"))
-                        receiveLatch.countDown()
-                    })
+                // Let's register a ConsumeAddress listener
+                val consumeLatch = CountDownLatch(1)
+                vertx.eventBus().consumer(ConsumeAddress, Handler { message: Message<JsonObject> ->
+                    assertEquals("Hello World", String(message.body().getBinary("data"), "UTF-8"))
+                    consumeLatch.countDown()
+                })
 
-                    val record = JsonObject()
-                        .put("data", "Hello World".toByteArray("UTF-8"))
-                        .put("partitionKey", "p1")
+                val consumerConfig = config
+                    .put("address", ConsumeAddress)
+                    .put("shardConsumerVerticleName", "org.collokia.vertx.kinesis.KinesisMessageBusShardConsumerVerticle")
 
-                    client.putRecord(StreamName, record, context.asyncAssertSuccess())
-
-                    if (receiveLatch.await(10, TimeUnit.SECONDS)) {
-                        future.complete()
-                    } else {
-                        future.fail("Didn't receive the right message in time")
-                    }
-                }, context.asyncAssertSuccess())
+                vertx.deployVerticle("org.collokia.vertx.kinesis.KinesisStreamConsumerVerticle", DeploymentOptions().setConfig(consumerConfig), context.asyncAssertSuccess() {
+                    // Consumer verticle is deployed, start waiting for a message
+                    consumeLatch.await(3, TimeUnit.SECONDS)
+                })
             })
         })
     }

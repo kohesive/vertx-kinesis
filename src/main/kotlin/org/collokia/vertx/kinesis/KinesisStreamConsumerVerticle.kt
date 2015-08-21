@@ -29,8 +29,12 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
                             .put("shardId", shardId)
                             .put("shardIterator", it)
 
-                    vertx.deployVerticle(
-                            config().getString("shardConsumerVerticleName"),
+                    val shardConsumerVerticleName = config().getString("shardConsumerVerticleName")
+                    if (shardConsumerVerticleName == null) {
+                        startFuture.fail("No 'shardConsumerVerticleName' specified")
+                    } else {
+                        vertx.deployVerticle(
+                            shardConsumerVerticleName,
                             DeploymentOptions().setConfig(shardVerticleConfig),
                             onSuccess<String> {
                                 shardVerticlesDeploymentIds.add(it)
@@ -38,7 +42,8 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
                             } onFail {
                                 log.error("Can't start shard consumer verticle", it)
                             }
-                    )
+                        )
+                    }
                 } onFail {
                     log.error("Can't retrieve shard iterator from shared memory", it)
                 })
