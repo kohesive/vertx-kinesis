@@ -67,7 +67,6 @@ class KinesisStreamConsumerVerticleTest {
     fun testConsume(context: TestContext) {
         client.createStream(StreamName, 2, context.asyncAssertSuccess() {
             // Stream must be created by now
-
             // Wait for it to become active
             val counter = AtomicInteger(5)
             val streamActive = AtomicBoolean(false)

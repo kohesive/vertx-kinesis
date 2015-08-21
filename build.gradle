@@ -66,6 +66,7 @@ dependencies {
     annotationProcessor 'io.vertx:vertx-codegen:3.0.0'
 
     testCompile 'junit:junit:4.12'
+    testCompile 'io.vertx:vertx-hazelcast:3.0.0'
 }
 
 task cleanGenerated(type: Delete) {

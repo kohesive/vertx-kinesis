@@ -60,7 +60,9 @@ object LocalMaps {
     fun <K : Any, V : Any> get(mapName: String, key: K): V? = map.get(mapName)?.get(key) as V?
 
     fun <K : Any, V : Any> put(mapName: String, key: K, value: V) {
-        map.putIfAbsent(mapName, ConcurrentHashMap<Any, Any>()).put(key, value)
+        map.putIfAbsent(mapName, ConcurrentHashMap<Any, Any>().let {
+            it.put(key, value); it
+        })
     }
 
 }
