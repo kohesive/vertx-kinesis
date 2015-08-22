@@ -8,6 +8,7 @@ import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.FixMethodOrder
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import kotlin.platform.platformStatic
@@ -38,5 +39,10 @@ class ClusterSharedMemoryTest : SharedMemoryTest {
         }
     }
 
-    override fun getVertx() = vertx
+    @Test
+    fun testClusterSharedMemory(context: TestContext) {
+        testSharedMemoryUse(context)
+    }
+
+    override fun getVertx(): Vertx = vertx
 }

@@ -1,17 +1,14 @@
 package org.collokia.vertx
 
 import io.vertx.core.Vertx
-import io.vertx.core.VertxOptions
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
-import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager
 import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.junit.FixMethodOrder
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import kotlin.platform.platformStatic
-import kotlin.properties.Delegates
 
 @RunWith(VertxUnitRunner::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -26,5 +23,10 @@ class LocalSharedMemoryTest : SharedMemoryTest {
         }
     }
 
-    override fun getVertx() = vertx
+    @Test
+    fun testLocalSharedMemory(context: TestContext) {
+        testSharedMemoryUse(context)
+    }
+
+    override fun getVertx(): Vertx = vertx
 }
