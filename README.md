@@ -27,7 +27,7 @@ client.start(result -> {
 });
 ```
 
-Once the client is initialized, it can be used to access the Amazon SQS API in async manner:
+Once the client is initialized, it can be used to access the Amazon Kinesis API in async manner:
 
 ```
 client.createStream("MyStream", 2, result -> {
