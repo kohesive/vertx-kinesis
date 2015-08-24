@@ -70,3 +70,26 @@ public class MyShardConsumingVerticle extends AbstractKinesisShardConsumerVertic
 It's deployed with a copy of a configuration passed to stream verticle plus shard metadata, so you can use the stream verticle configuration to pass the configuration data to the shard verticles.
 
 ## Record producer verticle
+
+A record producer verticle listens to the event bus address configured and puts the incoming records to the Kinesis stream. It's configured with AWS credentials, stream name and an address to listen to:
+
+```
+JsonObject config = new JsonObject()
+    .put("accessKey", "someAccessKey")
+    .put("secretKey", "someSecretKey")
+    .put("region", "us-west-2")
+    .put("streamName", "MyStream")
+    .put("address", "kinesis.stream.MyStream");
+    
+vertx.deployVerticle("org.collokia.vertx.kinesis.KinesisStreamProducerVerticle", new DeploymentOptions().setConfig(config));    
+```
+
+To submit a record:
+
+```
+JsonObject record = new JsonObject()
+    .put("data", "Hello World".getBytes("UTF-8"))
+    .put("partitionKey", "someKey");
+
+vertx.eventBus().send("kinesis.stream.MyStream", record);
+```
