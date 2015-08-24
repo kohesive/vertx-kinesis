@@ -69,9 +69,9 @@ public class MyShardConsumingVerticle extends AbstractKinesisShardConsumerVertic
 
 It's deployed with a copy of a configuration passed to stream verticle plus shard metadata, so you can use the stream verticle configuration to pass the configuration data to the shard verticles.
 
-### Shard iterator
+### Shard iterators
 
-TODO
+In order to avoid consuming the same record twice, shard iterator is stored in Vertx's cluster memory (or local memory in case of no cluster present) async map named `kinesis-sharditerator` with keys following the pattern `STREAM_NAME-SHARD_ID`.
 
 ## Record producer verticle usage
 
@@ -97,3 +97,7 @@ JsonObject record = new JsonObject()
 
 vertx.eventBus().send("kinesis.stream.MyStream", record);
 ```
+
+## Building from sources
+
+vertx-kinesis unit tests rely on empty local Kinesis instance. In order for them to work, the build script installs and runs [Kinesalite](https://github.com/mhart/kinesalite), a Node.js Kinesis implementation. Currently, the gradle build script simply tries to install Kinesalite using `npm install -g kinesalite`, then run it, and stop it after tests by locating a process by open port. Which obviously needs [npm](https://www.npmjs.com) installed.
