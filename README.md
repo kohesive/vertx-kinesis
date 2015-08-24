@@ -58,13 +58,13 @@ When the stream verticle is deployed, it deploys a shard verticle for each strea
 
 ```
 public class MyShardConsumingVerticle extends AbstractKinesisShardConsumerVerticle {
-        @Override
-        protected void processRecords(@NotNull List<? extends JsonObject> records) {
-            for (JsonObject record : records) {
-                System.out.println(record);
-            }
+    @Override
+    protected void processRecords(@NotNull List<? extends JsonObject> records) {
+        for (JsonObject record : records) {
+            System.out.println(record);
         }
     }
+}
 ```
 
 It's deployed with a copy of a configuration passed to stream verticle plus shard metadata, so you can use the stream verticle configuration to pass the configuration data to the shard verticles.
