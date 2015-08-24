@@ -30,9 +30,11 @@ abstract class AbstractKinesisShardConsumerVerticle : KinesisVerticle() {
 
         if (initialShardIterator != null) {
             shardIterator = initialShardIterator
+            log.info("Starting shard consumer with iterator = $shardIterator")
             scheduleGetRecords()
             startFuture.complete()
         } else {
+            log.info("Starting shard consumer without initial iterator")
             vertxClient.getShardIterator(getStreamName(), getShardId(), "TRIM_HORIZON", null, Handler {
                 if (it.succeeded()) {
                     shardIterator = it.result()

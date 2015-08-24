@@ -1,11 +1,13 @@
 package org.collokia.vertx.kinesis
 
-import org.collokia.vertx.util.getFromSharedMemoryAsync
-import org.collokia.vertx.util.onSuccess
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
+import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
+import nl.komponents.kovenant.async
+import org.collokia.vertx.util.getFromSharedMemoryAsync
+import org.collokia.vertx.util.onSuccess
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -24,10 +26,10 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
             val latch = CountDownLatch(shardIds.size())
 
             for (shardId in shardIds) {
-                vertx.getFromSharedMemoryAsync(KinesisVerticle.ShardIteratorMapName, getShardIteratorKey(shardId), onSuccess<String?> {
+                vertx.getFromSharedMemoryAsync(KinesisVerticle.ShardIteratorMapName, getShardIteratorKey(shardId), onSuccess<String?> { shardIterator ->
                     val shardVerticleConfig = config().copy()
-                            .put("shardId", shardId)
-                            .put("shardIterator", it)
+                        .put("shardId", shardId)
+                        .put("shardIterator", shardIterator)
 
                     val shardConsumerVerticleName = config().getString("shardConsumerVerticleName")
                     if (shardConsumerVerticleName == null) {
@@ -61,7 +63,33 @@ class KinesisStreamConsumerVerticle : KinesisVerticle() {
     }
 
     override fun stopAfterClientDispose(stopFuture: Future<Void>) {
-        stopFuture.complete()
+        // Undeploy shard consumer verticles
+        val latch = CountDownLatch(shardVerticlesDeploymentIds.size())
+
+        val shardsCount = shardVerticlesDeploymentIds.size()
+        shardVerticlesDeploymentIds.forEach { deploymentId ->
+            vertx.undeploy(deploymentId, Handler {
+                latch.countDown()
+
+                if (it.succeeded()) {
+                    shardVerticlesDeploymentIds.remove(deploymentId)
+                } else {
+                    // Already disposed
+                    if (it.cause() !is IllegalStateException) {
+                        log.error("Can't stop shard consumer verticle", it.cause())
+                    }
+                }
+            })
+        }
+
+        async {
+            if (latch.await(10, TimeUnit.SECONDS)) {
+                log.info("Undeployed $shardsCount shard consumer(s)")
+                stopFuture.complete()
+            } else {
+                stopFuture.fail("Can't stop shard listeners")
+            }
+        }
     }
 
 }
