@@ -59,7 +59,7 @@ When the stream verticle is deployed, it deploys a shard verticle for each strea
 ```
 public class MyShardConsumingVerticle extends AbstractKinesisShardConsumerVerticle {
     @Override
-    protected void processRecords(@NotNull List<? extends JsonObject> records) {
+    protected void processRecords(List<? extends JsonObject> records) {
         for (JsonObject record : records) {
             System.out.println(record);
         }
