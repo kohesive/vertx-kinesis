@@ -37,7 +37,7 @@ client.createStream("MyStream", 2, result -> {
 });
 ```        
         
-Stream/shard consuming verticle usage
+## Stream/shard consuming verticle usage
 
 Kinesis stream/shard consumer verticles can be set up to process Kinesis records. A stream consumer verticle is deployed, which in turn deploys a shard consuming verticle for each stream's shard discovered.
 
@@ -54,3 +54,19 @@ JsonObject config = new JsonObject()
 vertx.deployVerticle("org.collokia.vertx.kinesis.KinesisStreamConsumerVerticle", new DeploymentOptions().setConfig(config));    
 ```
 
+When the stream verticle is deployed, it deploys a shard verticle for each stream's shard. The verticle to be deployed this way must be a subclass of `org.collokia.vertx.kinesis.AbstractKinesisShardConsumerVerticle`:
+
+```
+public class MyShardConsumingVerticle extends AbstractKinesisShardConsumerVerticle {
+        @Override
+        protected void processRecords(@NotNull List<? extends JsonObject> records) {
+            for (JsonObject record : records) {
+                System.out.println(record);
+            }
+        }
+    }
+```
+
+It's deployed with a copy of a configuration passed to stream verticle plus shard metadata, so you can use the stream verticle configuration to pass the configuration data to the shard verticles.
+
+## Record producer verticle
