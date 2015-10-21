@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentMap
 
 
 fun <K : Any, V : Any> Vertx.getFromSharedMemoryAsync(mapName: String, key: K, resultHandler: Handler<AsyncResult<V?>>) {
-    if (isClustered()) {
-        (this as VertxInternal).getClusterManager().getAsyncMap(mapName, Handler { mapAsyncResult: AsyncResult<AsyncMap<K, V>> ->
+    if (isClustered) {
+        (this as VertxInternal).clusterManager.getAsyncMap(mapName, Handler { mapAsyncResult: AsyncResult<AsyncMap<K, V>> ->
             if (mapAsyncResult.succeeded()) {
                 val asyncMap = mapAsyncResult.result()
                 asyncMap.get(key, Handler { getAsyncResult: AsyncResult<V> ->
@@ -32,8 +32,8 @@ fun <K : Any, V : Any> Vertx.getFromSharedMemoryAsync(mapName: String, key: K, r
 }
 
 fun <K : Any, V : Any> Vertx.putToSharedMemoryAsync(mapName: String, key: K, value: V, resultHandler: Handler<AsyncResult<Void?>>) {
-    if (isClustered()) {
-        (this as VertxInternal).getClusterManager().getAsyncMap(mapName, Handler { mapAsyncResult: AsyncResult<AsyncMap<K, V>> ->
+    if (isClustered) {
+        (this as VertxInternal).clusterManager.getAsyncMap(mapName, Handler { mapAsyncResult: AsyncResult<AsyncMap<K, V>> ->
             if (mapAsyncResult.succeeded()) {
                 val asyncMap = mapAsyncResult.result()
                 asyncMap.put(key, value) {

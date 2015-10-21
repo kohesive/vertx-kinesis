@@ -27,7 +27,7 @@ import kotlin.properties.Delegates
 class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClient {
 
     companion object {
-        private val log = LoggerFactory.getLogger(javaClass)
+        private val log = LoggerFactory.getLogger(KinesisClientImpl::class.java)
     }
 
     var client: AmazonKinesisAsync by Delegates.notNull()
@@ -45,26 +45,26 @@ class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClien
             client.describeStreamAsync(
                 DescribeStreamRequest().withStreamName(streamName).withLimit(limit).withExclusiveStartShardId(exclusiveStartShardId),
                 resultHandler.withConverter {
-                    with(it.getStreamDescription()) {
+                    with(it.streamDescription) {
                         JsonObject()
-                            .put("streamName", this.getStreamName())
-                            .put("streamARN", this.getStreamARN())
-                            .put("streamStatus", this.getStreamStatus())
-                            .put("hasMoreShards", this.isHasMoreShards())
-                            .put("shards", JsonArray(this.getShards().map { shard ->
+                            .put("streamName", this.streamName)
+                            .put("streamARN", this.streamARN)
+                            .put("streamStatus", this.streamStatus)
+                            .put("hasMoreShards", this.isHasMoreShards)
+                            .put("shards", JsonArray(this.shards.map { shard ->
                                 JsonObject()
-                                    .put("shardId", shard.getShardId())
-                                    .put("parentShardId", shard.getParentShardId())
-                                    .put("adjacentParentShardId", shard.getAdjacentParentShardId())
-                                    .put("hashKeyRange", shard?.getHashKeyRange().let { hashRange ->
+                                    .put("shardId", shard.shardId)
+                                    .put("parentShardId", shard.parentShardId)
+                                    .put("adjacentParentShardId", shard.adjacentParentShardId)
+                                    .put("hashKeyRange", shard?.hashKeyRange.let { hashRange ->
                                         JsonObject()
-                                            .put("startingHashKey", hashRange?.getStartingHashKey())
-                                            .put("endingHashKey", hashRange?.getEndingHashKey())
+                                            .put("startingHashKey", hashRange?.startingHashKey)
+                                            .put("endingHashKey", hashRange?.endingHashKey)
                                     })
-                                    .put("sequenceNumberRange", shard?.getSequenceNumberRange().let { sequenceRange ->
+                                    .put("sequenceNumberRange", shard?.sequenceNumberRange.let { sequenceRange ->
                                         JsonObject()
-                                            .put("startingSequenceNumber", sequenceRange?.getStartingSequenceNumber())
-                                            .put("endingSequenceNumber", sequenceRange?.getEndingSequenceNumber())
+                                            .put("startingSequenceNumber", sequenceRange?.startingSequenceNumber)
+                                            .put("endingSequenceNumber", sequenceRange?.endingSequenceNumber)
                                     })
                             })
                         )
@@ -82,8 +82,8 @@ class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClien
                 .withPartitionKey(record.getString("partitionKey"))
                 .withStreamName(streamName), resultHandler.withConverter {
                     JsonObject()
-                        .put("shardId", it.getShardId())
-                        .put("sequenceNumber", it.getSequenceNumber())
+                        .put("shardId", it.shardId)
+                        .put("sequenceNumber", it.sequenceNumber)
                 }
             )
         }
@@ -95,7 +95,7 @@ class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClien
                 .withStreamName(streamName)
                 .withShardId(shardId)
                 .withShardIteratorType(shardIteratorType)
-                .withStartingSequenceNumber(startingSequenceNumber), resultHandler.withConverter { it.getShardIterator() }
+                .withStartingSequenceNumber(startingSequenceNumber), resultHandler.withConverter { it.shardIterator }
             )
         }
     }
@@ -104,13 +104,13 @@ class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClien
         withClient { client ->
             client.getRecordsAsync(GetRecordsRequest().withShardIterator(shardIterator).withLimit(limit), resultHandler.withConverter {
                 JsonObject()
-                    .put("nextShardIterator", it.getNextShardIterator())
-                    .put("millisBehindLatest", it.getMillisBehindLatest())
-                    .put("records", JsonArray(it.getRecords().map { record ->
+                    .put("nextShardIterator", it.nextShardIterator)
+                    .put("millisBehindLatest", it.millisBehindLatest)
+                    .put("records", JsonArray(it.records.map { record ->
                         JsonObject()
-                            .put("sequenceNumber", record.getSequenceNumber())
-                            .put("data", record.getData().toByteArray())
-                            .put("partitionKey", record.getPartitionKey())
+                            .put("sequenceNumber", record.sequenceNumber)
+                            .put("data", record.data.toByteArray())
+                            .put("partitionKey", record.partitionKey)
                     }))
             })
         }
@@ -125,7 +125,7 @@ class KinesisClientImpl(val vertx: Vertx, val config: JsonObject) : KinesisClien
                     BasicAWSCredentials(config.getString("accessKey"), config.getString("secretKey"))
                 } else {
                     try {
-                        ProfileCredentialsProvider().getCredentials()
+                        ProfileCredentialsProvider().credentials
                     } catch (t: Throwable) {
                         throw AmazonClientException(
                             "Cannot load the credentials from the credential profiles file. " +

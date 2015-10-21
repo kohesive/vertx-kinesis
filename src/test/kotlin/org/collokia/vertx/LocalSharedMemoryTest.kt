@@ -8,7 +8,6 @@ import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
-import kotlin.platform.platformStatic
 
 @RunWith(VertxUnitRunner::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -17,7 +16,7 @@ class LocalSharedMemoryTest : SharedMemoryTest {
         var vertx: Vertx = Vertx.vertx()
 
         @AfterClass
-        @platformStatic
+        @JvmStatic
         fun after(context: TestContext) {
             vertx.close(context.asyncAssertSuccess())
         }

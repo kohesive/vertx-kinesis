@@ -1,18 +1,26 @@
+description "Collokia's Vertx-Kinesis Integration"
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.5'
+}
+
 buildscript {
     repositories {
         jcenter()
         maven {
             url 'http://oss.sonatype.org/content/repositories/snapshots'
         }
+        mavenCentral()
     }
     dependencies {
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:0.1-SNAPSHOT'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
     }
 }
 
 apply plugin: 'kotlin'
 apply plugin: 'idea'
 apply plugin: 'groovy'
+apply plugin: 'maven-publish'
 
 if (!JavaVersion.current().java8Compatible) {
     throw new IllegalStateException('''A Haiku:
@@ -48,25 +56,24 @@ sourceSets {
 }
 
 dependencies {
-    compile 'io.vertx:vertx-core:3.0.0'
-    compile 'io.vertx:vertx-unit:3.0.0'
-    compile 'io.vertx:vertx-codegen:3.0.0'
-    compile 'io.vertx:vertx-lang-groovy:3.0.0'
-    compile 'io.vertx:vertx-lang-js:3.0.0'
-    compile 'io.vertx:vertx-service-factory:3.0.0'
-    compile 'io.vertx:vertx-hazelcast:3.0.0'
-    compile 'io.vertx:vertx-service-proxy:3.0.0'
+    compile "io.vertx:vertx-core:$version_vertx"
+    compile "io.vertx:vertx-unit:$version_vertx"
+    compile "io.vertx:vertx-codegen:$version_vertx"
+    compile "io.vertx:vertx-lang-groovy:$version_vertx"
+    compile "io.vertx:vertx-lang-js:$version_vertx"
+    compile "io.vertx:vertx-service-factory:$version_vertx"
+    compile "io.vertx:vertx-hazelcast:$version_vertx"
+    compile "io.vertx:vertx-service-proxy:$version_vertx"
 
-    compile 'org.jetbrains.kotlin:kotlin-stdlib:0.1-SNAPSHOT'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
-    compile 'com.amazonaws:aws-java-sdk-kinesis:1.10.10'
+    compile "com.amazonaws:aws-java-sdk-kinesis:$version_kinesis"
 
-    compile 'nl.komponents.kovenant:kovenant:2.2.+'
+    compile "nl.komponents.kovenant:kovenant:$version_kovenant"
 
-    annotationProcessor 'io.vertx:vertx-codegen:3.0.0'
-
-    testCompile 'junit:junit:4.12'
-    testCompile 'io.vertx:vertx-hazelcast:3.0.0'
+    annotationProcessor "io.vertx:vertx-codegen:$version_vertx"
+    
+    testCompile "junit:junit:$version_junit"
 }
 
 task cleanGenerated(type: Delete) {
@@ -141,3 +148,20 @@ task freeAllPorts << {
 }
 
 test.finalizedBy(freeAllPorts)
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "https://collokia.artifactoryonline.com/collokia/collokia-internal"
+            credentials {
+                username "${collokiaRepoUser}"
+                password "${collokiaRepoPass}"
+            }
+        }
+    }
+}

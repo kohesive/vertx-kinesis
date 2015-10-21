@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.platform.platformStatic
 import kotlin.properties.Delegates
 import kotlin.test.assertEquals
 
@@ -48,7 +47,7 @@ class KinesisStreamConsumerShardIteratorTest {
             .put("shardConsumerVerticleName", "org.collokia.vertx.kinesis.KinesisMessageBusShardConsumerVerticle")
 
         @BeforeClass
-        @platformStatic
+        @JvmStatic
         fun before(context: TestContext) {
             client = KinesisClient.create(vertx, config)
             val latch = CountDownLatch(1)
@@ -57,7 +56,7 @@ class KinesisStreamConsumerShardIteratorTest {
         }
 
         @AfterClass
-        @platformStatic
+        @JvmStatic
         fun after(context: TestContext) {
             client.stop(context.asyncAssertSuccess())
             vertx.close(context.asyncAssertSuccess())
@@ -72,7 +71,7 @@ class KinesisStreamConsumerShardIteratorTest {
             val counter = AtomicInteger(5)
             val streamActive = AtomicBoolean(false)
 
-            while (counter.getAndDecrement() > 0 && !streamActive.get()) {
+            while (counter.andDecrement > 0 && !streamActive.get()) {
                 val latch = CountDownLatch(1)
 
 

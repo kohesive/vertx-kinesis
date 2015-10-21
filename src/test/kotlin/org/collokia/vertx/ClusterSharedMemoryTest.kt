@@ -11,7 +11,6 @@ import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
-import kotlin.platform.platformStatic
 import kotlin.properties.Delegates
 
 @RunWith(VertxUnitRunner::class)
@@ -22,7 +21,7 @@ class ClusterSharedMemoryTest : SharedMemoryTest {
         var vertx: Vertx by Delegates.notNull()
 
         @BeforeClass
-        @platformStatic
+        @JvmStatic
         fun before(context: TestContext) {
             val mgr = HazelcastClusterManager()
             val options = VertxOptions().setClusterManager(mgr)
@@ -33,7 +32,7 @@ class ClusterSharedMemoryTest : SharedMemoryTest {
         }
 
         @AfterClass
-        @platformStatic
+        @JvmStatic
         fun after(context: TestContext) {
             vertx.close(context.asyncAssertSuccess())
         }
