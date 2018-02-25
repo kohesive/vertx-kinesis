@@ -1,3 +1,5 @@
+[![Kotlin](https://img.shields.io/badge/kotlin-1.2.21-blue.svg)](http://kotlinlang.org)  [![Maven Central](https://img.shields.io/maven-central/v/uy.kohesive.vertx/vertx-kinesis.svg)](https://mvnrepository.com/artifact/uy.kohesive.vertx) [![CircleCI branch](https://img.shields.io/circleci/project/kohesive/vertx-kinesis/master.svg)](https://circleci.com/gh/kohesive/vertx-kinesis/tree/master) [![Issues](https://img.shields.io/github/issues/kohesive/vertx-kinesis.svg)](https://github.com/kohesive/vertx-kinesis/issues?q=is%3Aopen) [![DUB](https://img.shields.io/dub/l/vibe-d.svg)](https://github.com/kohesive/chillambda/blob/master/LICENSE) [![Kotlin Slack](https://img.shields.io/badge/chat-kotlin%20slack%20%23kohesive-orange.svg)](http://kotlinslackin.herokuapp.com)
+
 # Amazon Kinesis Client for Vert.x
 This Vert.x client allows Amazon Kinesis access in three ways:
 
