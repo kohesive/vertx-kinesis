@@ -1,4 +1,4 @@
-package uy.collokia.vertx.kinesis
+package uy.kohesive.vertx.kinesis
 
 import io.vertx.core.Future
 import io.vertx.core.Handler

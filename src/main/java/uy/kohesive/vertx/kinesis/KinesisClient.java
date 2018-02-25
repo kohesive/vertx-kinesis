@@ -1,12 +1,11 @@
 package uy.kohesive.vertx.kinesis;
 
-import com.amazonaws.services.kinesis.model.CreateStreamResult;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import uy.collokia.vertx.kinesis.impl.KinesisClientImpl;
+import uy.kohesive.vertx.kinesis.impl.KinesisClientImpl;
 
 @VertxGen
 public interface KinesisClient {

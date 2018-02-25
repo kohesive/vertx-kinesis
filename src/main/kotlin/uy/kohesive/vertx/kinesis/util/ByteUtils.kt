@@ -1,4 +1,4 @@
-package uy.collokia.vertx.kinesis.util
+package uy.kohesive.vertx.kinesis.util
 
 import java.nio.ByteBuffer
 

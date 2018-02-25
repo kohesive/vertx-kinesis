@@ -1,9 +1,8 @@
-package uy.collokia.vertx.kinesis
+package uy.kohesive.vertx.kinesis
 
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
-import uy.collokia.vertx.kinesis.impl.KinesisClientImpl
-import uy.kohesive.vertx.kinesis.KinesisClient
+import uy.kohesive.vertx.kinesis.impl.KinesisClientImpl
 import kotlin.properties.Delegates
 
 abstract class KinesisVerticle : AbstractVerticle() {

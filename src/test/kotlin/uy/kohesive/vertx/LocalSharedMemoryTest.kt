@@ -1,4 +1,4 @@
-package uy.collokia.vertx
+package uy.kohesive.vertx
 
 import io.vertx.core.Vertx
 import io.vertx.ext.unit.TestContext

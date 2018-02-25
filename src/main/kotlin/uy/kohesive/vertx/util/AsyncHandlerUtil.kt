@@ -1,4 +1,4 @@
-package uy.collokia.vertx.util
+package uy.kohesive.vertx.util
 
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler

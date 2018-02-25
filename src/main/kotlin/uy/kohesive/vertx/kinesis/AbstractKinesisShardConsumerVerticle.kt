@@ -1,6 +1,6 @@
-package uy.collokia.vertx.kinesis
+package uy.kohesive.vertx.kinesis
 
-import uy.collokia.vertx.util.putToSharedMemoryAsync
+import uy.kohesive.vertx.util.putToSharedMemoryAsync
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject

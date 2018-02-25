@@ -1,4 +1,4 @@
-package uy.collokia.vertx.kinesis.impl
+package uy.kohesive.vertx.kinesis.impl
 
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonWebServiceRequest
@@ -21,7 +21,7 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
 import uy.kohesive.vertx.kinesis.KinesisClient
-import uy.collokia.vertx.kinesis.util.toByteArray
+import uy.kohesive.vertx.kinesis.util.toByteArray
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.properties.Delegates

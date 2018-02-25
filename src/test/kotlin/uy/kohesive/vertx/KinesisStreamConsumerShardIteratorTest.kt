@@ -1,4 +1,4 @@
-package uy.collokia.vertx
+package uy.kohesive.vertx
 
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
@@ -19,12 +19,13 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.properties.Delegates
 import kotlin.test.assertEquals
 
 @RunWith(VertxUnitRunner::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-class KinesisStreamConsumerVerticleTest {
+class KinesisStreamConsumerShardIteratorTest {
 
     companion object {
         val vertx: Vertx = Vertx.vertx()
@@ -32,8 +33,8 @@ class KinesisStreamConsumerVerticleTest {
         val KinesalitePort = 4567
         val KinesaliteHost = "localhost"
 
-        val StreamName = "TestStream"
-        val Address = "kinesis.stream.test"
+        val StreamName = "TestStream3" + System.currentTimeMillis()
+        val Address = "kinesis.stream.test4"
 
         var client: KinesisClient by Delegates.notNull()
 
@@ -43,11 +44,13 @@ class KinesisStreamConsumerVerticleTest {
             .put("address", Address)
             .put("host", KinesaliteHost)
             .put("port", KinesalitePort)
-            .put("shardConsumerVerticleName", "org.collokia.vertx.kinesis.KinesisMessageBusShardConsumerVerticle")
+            .put("shardConsumerVerticleName", "uy.kohesive.vertx.kinesis.KinesisMessageBusShardConsumerVerticle")
 
         @BeforeClass
         @JvmStatic
         fun before(context: TestContext) {
+            System.setProperty("com.amazonaws.sdk.disableCbor", "1")
+
             client = KinesisClient.create(
                 vertx,
                 config
@@ -66,8 +69,8 @@ class KinesisStreamConsumerVerticleTest {
     }
 
     @Test
-    fun testConsume(context: TestContext) {
-        client.createStream(StreamName, 2, context.asyncAssertSuccess() {
+    fun testProduce(context: TestContext) {
+        client.createStream(StreamName, 1, context.asyncAssertSuccess() {
             // Stream must be created by now
             // Wait for it to become active
             val counter = AtomicInteger(5)
@@ -81,7 +84,6 @@ class KinesisStreamConsumerVerticleTest {
                     if (describeJson.getString("streamStatus") == "ACTIVE") {
                         streamActive.set(true)
                     }
-
                     latch.countDown()
                 })
 
@@ -91,31 +93,59 @@ class KinesisStreamConsumerVerticleTest {
 
             context.assertTrue(streamActive.get())
 
+            val expectedMessage = AtomicReference("First Message")
+
             // Now the stream is active
             // Deploy the consumer verticle and start listening to the address
-            vertx.deployVerticle("org.collokia.vertx.kinesis.KinesisStreamConsumerVerticle", DeploymentOptions().setConfig(
+            vertx.deployVerticle("uy.kohesive.vertx.kinesis.KinesisStreamConsumerVerticle", DeploymentOptions().setConfig(
                 config
-            ), context.asyncAssertSuccess() {
+            ), context.asyncAssertSuccess() { depoymentId ->
                 vertx.executeBlocking(Handler { future: Future<Void> ->
-                    val receiveLatch = CountDownLatch(1)
+                    var receiveLatch = CountDownLatch(1)
 
                     // Verticle id deployed, let's start consuming messages from the address configured
                     vertx.eventBus().consumer(Address, Handler { message: Message<JsonObject> ->
-                        assertEquals("Hello World", String(message.body().getBinary("data"), Charsets.UTF_8))
                         receiveLatch.countDown()
+
+                        val receivedMessage = String(message.body().getBinary("data"), Charsets.UTF_8)
+                        println("Got message: $receivedMessage")
+                        assertEquals(expectedMessage.get(), receivedMessage)
                     })
 
                     val record = JsonObject()
-                        .put("data", "Hello World".toByteArray(Charsets.UTF_8))
+                        .put("data", "First Message".toByteArray(Charsets.UTF_8))
                         .put("partitionKey", "p1")
-
                     client.putRecord(StreamName, record, context.asyncAssertSuccess())
 
-                    if (receiveLatch.await(10, TimeUnit.SECONDS)) {
-                        future.complete()
-                    } else {
+                    // Waiting for the 'first message'
+                    if (!receiveLatch.await(10, TimeUnit.SECONDS)) {
                         future.fail("Didn't receive the right message in time")
                     }
+
+                    // Now we undeploy the consumer verticles
+                    vertx.undeploy(depoymentId, context.asyncAssertSuccess() {
+                        // Consumers are undeployed, let's send a new record to Kinesis
+                        expectedMessage.set("Second Message")
+
+                        val newRecord = JsonObject()
+                            .put("data", "Second Message".toByteArray(Charsets.UTF_8))
+                            .put("partitionKey", "p1")
+                        client.putRecord(StreamName, newRecord, context.asyncAssertSuccess() {
+                            // Now let's deploy them again to check if we don't get the old message again
+                            vertx.deployVerticle("uy.kohesive.vertx.kinesis.KinesisStreamConsumerVerticle", DeploymentOptions().setConfig(
+                                config
+                            ), context.asyncAssertSuccess() { _ ->
+                                receiveLatch = CountDownLatch(1)
+
+                                // Waiting for new message
+                                if (receiveLatch.await(10, TimeUnit.SECONDS)) {
+                                    future.complete()
+                                } else {
+                                    future.fail("Didn't receive the right message in time")
+                                }
+                            })
+                        })
+                    })
                 }, context.asyncAssertSuccess())
             })
         })

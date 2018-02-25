@@ -1,4 +1,4 @@
-package uy.collokia.vertx.kinesis
+package uy.kohesive.vertx.kinesis
 
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
@@ -6,8 +6,8 @@ import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
 import nl.komponents.kovenant.async
-import uy.collokia.vertx.util.getFromSharedMemoryAsync
-import uy.collokia.vertx.util.onSuccess
+import uy.kohesive.vertx.util.getFromSharedMemoryAsync
+import uy.kohesive.vertx.util.onSuccess
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit

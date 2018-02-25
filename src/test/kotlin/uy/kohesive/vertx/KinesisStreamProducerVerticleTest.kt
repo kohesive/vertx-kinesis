@@ -1,4 +1,4 @@
-package uy.collokia.vertx
+package uy.kohesive.vertx
 
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Handler
@@ -31,7 +31,7 @@ class KinesisStreamProducerVerticleTest {
         val KinesalitePort = 4567
         val KinesaliteHost = "localhost"
 
-        val StreamName = "TestStream2"
+        val StreamName = "TestStream2" + System.currentTimeMillis()
         val ProduceAddress = "kinesis.stream.test2"
         val ConsumeAddress = "kinesis.stream.test3"
 
@@ -47,6 +47,7 @@ class KinesisStreamProducerVerticleTest {
         @BeforeClass
         @JvmStatic
         fun before(context: TestContext) {
+            System.setProperty("com.amazonaws.sdk.disableCbor", "1")
             client = KinesisClient.create(
                 vertx,
                 config
@@ -92,7 +93,7 @@ class KinesisStreamProducerVerticleTest {
 
             // Now the stream is active
             // Deploy the producer verticle and send some messages
-            vertx.deployVerticle("org.collokia.vertx.kinesis.KinesisStreamProducerVerticle", DeploymentOptions().setConfig(
+            vertx.deployVerticle("uy.kohesive.vertx.kinesis.KinesisStreamProducerVerticle", DeploymentOptions().setConfig(
                 config
             ), context.asyncAssertSuccess() {
                 // Send a message to the address listened by produced verticle
@@ -110,9 +111,9 @@ class KinesisStreamProducerVerticleTest {
 
                 val consumerConfig = config
                     .put("address", ConsumeAddress)
-                    .put("shardConsumerVerticleName", "org.collokia.vertx.kinesis.KinesisMessageBusShardConsumerVerticle")
+                    .put("shardConsumerVerticleName", "uy.kohesive.vertx.kinesis.KinesisMessageBusShardConsumerVerticle")
 
-                vertx.deployVerticle("org.collokia.vertx.kinesis.KinesisStreamConsumerVerticle", DeploymentOptions().setConfig(consumerConfig), context.asyncAssertSuccess() {
+                vertx.deployVerticle("uy.kohesive.vertx.kinesis.KinesisStreamConsumerVerticle", DeploymentOptions().setConfig(consumerConfig), context.asyncAssertSuccess() {
                     // Consumer verticle is deployed, start waiting for a message
                     consumeLatch.await(3, TimeUnit.SECONDS)
                 })
