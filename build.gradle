@@ -65,7 +65,7 @@ dependencies {
 }
 
 task runNpmKinesalite(type: Exec) {
-	commandLine 'npm', 'install', '-g', 'kinesalite'
+	commandLine 'npm', 'install', 'kinesalite'
 }
 
 task startKinesalite(type: ExecWait) {
