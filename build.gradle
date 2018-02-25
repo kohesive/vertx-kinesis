@@ -22,7 +22,6 @@ buildscript {
 apply from: "$rootDir/gradle/sonatype-top.gradle"
 
 apply from: "$rootDir/gradle/kotlin-settings.gradle"
-// apply plugin: 'groovy'
 apply plugin: 'net.ltgt.apt'
 
 apply from: "$rootDir/gradle/idea.gradle"
@@ -60,6 +59,9 @@ dependencies {
     testCompile "io.vertx:vertx-service-proxy:$version_vertx"
 
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
+
+    // fix for bad dependency
+    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.9.3"
 }
 
 task runNpmKinesalite(type: Exec) {
