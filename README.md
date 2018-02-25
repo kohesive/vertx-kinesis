@@ -5,6 +5,15 @@ This Vert.x client allows Amazon Kinesis access in three ways:
 * As Amazon Kinesis stream/shard consuming verticles
 * As a verticle listening to message bus and routing incoming messages to Kinesis stream
 
+### Gradle /Maven
+
+Add add the following dependency:
+
+```
+uy.kohesive.vertx:vertx-kensis:1.0.0-BETA-01
+```
+
+
 ## Service usage
 
 Client must be configured with a region. It can also be configured with AWS credentials, otherwise a default ~/.aws/credentials credentials file will be used:
@@ -51,10 +60,10 @@ JsonObject config = new JsonObject()
     .put("streamName", "MyStream")
     .put("shardConsumerVerticleName", "com.example.MyShardConsumingVerticle")
 
-vertx.deployVerticle("org.collokia.vertx.kinesis.KinesisStreamConsumerVerticle", new DeploymentOptions().setConfig(config));    
+vertx.deployVerticle("uy.kohesive.vertx.kinesis.KinesisStreamConsumerVerticle", new DeploymentOptions().setConfig(config));    
 ```
 
-When the stream verticle is deployed, it deploys a shard verticle for each stream's shard. The verticle to be deployed this way must be a subclass of `org.collokia.vertx.kinesis.AbstractKinesisShardConsumerVerticle`:
+When the stream verticle is deployed, it deploys a shard verticle for each stream's shard. The verticle to be deployed this way must be a subclass of `uy.kohesive.vertx.kinesis.AbstractKinesisShardConsumerVerticle`:
 
 ```
 public class MyShardConsumingVerticle extends AbstractKinesisShardConsumerVerticle {
@@ -85,7 +94,7 @@ JsonObject config = new JsonObject()
     .put("streamName", "MyStream")
     .put("address", "kinesis.stream.MyStream");
     
-vertx.deployVerticle("org.collokia.vertx.kinesis.KinesisStreamProducerVerticle", new DeploymentOptions().setConfig(config));    
+vertx.deployVerticle("uy.kohesive.vertx.kinesis.KinesisStreamProducerVerticle", new DeploymentOptions().setConfig(config));    
 ```
 
 To submit a record:
