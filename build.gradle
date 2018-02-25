@@ -69,7 +69,7 @@ task runNpmKinesalite(type: Exec) {
 }
 
 task startKinesalite(type: ExecWait) {
-    command 'kinesalite'
+    command "$rootDir/node_modules/.bin/kinesalite"
     ready 'Listening at'
     directory '..'
 }
